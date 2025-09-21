@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexo Spring - Prueba de API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #0c4278 0%, #1565c0 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #0c4278;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        button {
+            background: #0c4278;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #e9ecef;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Flexo Spring - Prueba de API</h1>
+        
+        <div class="test-section">
+            <h3>1. Probar Conexión a Base de Datos</h3>
+            <button onclick="testConnection()">Probar Conexión</button>
+            <div id="connectionResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Contar Usuarios</h3>
+            <button onclick="countUsers()">Contar Usuarios</button>
+            <div id="countResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Crear Usuario</h3>
+            <input type="text" id="codigoUsuario" placeholder="Código de usuario" required>
+            <input type="password" id="contrasena" placeholder="Contraseña" required>
+            <input type="text" id="nombre" placeholder="Nombre" required>
+            <input type="text" id="apellido" placeholder="Apellido" required>
+            <select id="rol">
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
+                <option value="supervisor">Supervisor</option>
+            </select>
+            <input type="file" id="foto" accept="image/*" onchange="handleFileSelect(this)">
+            <div id="fotoPreview" style="margin-top: 10px;"></div>
+            <br>
+            <button onclick="createUser()">Crear Usuario</button>
+            <div id="createResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Probar Login</h3>
+            <input type="text" id="loginCodigo" placeholder="Código de usuario">
+            <input type="password" id="loginPassword" placeholder="Contraseña">
+            <br>
+            <button onclick="testLogin()">Probar Login</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Instrucciones</h3>
+            <ol>
+                <li>Asegúrate de que MySQL esté ejecutándose</li>
+                <li>Ejecuta <code>test-database.bat</code> para crear la base de datos</li>
+                <li>Ejecuta <code>run-backend.bat</code> para iniciar la API</li>
+                <li>Usa esta página para probar la funcionalidad</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://localhost:7001/api';
+        let selectedPhotoBase64 = null;
+
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('fotoPreview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedPhotoBase64 = e.target.result.split(',')[1]; // Remover el prefijo data:image/...;base64,
+                    preview.innerHTML = `<img src="${e.target.result}" style="max-width: 100px; max-height: 100px; border-radius: 50%;" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedPhotoBase64 = null;
+                preview.innerHTML = '';
+            }
+        }
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.textContent = 'Probando conexión...';
+            
+            const result = await makeRequest(`${API_BASE}/user/test-connection`);
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ ${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${result.error || JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+
+        async function countUsers() {
+            const resultDiv = document.getElementById('countResult');
+            resultDiv.textContent = 'Contando usuarios...';
+            
+            const result = await makeRequest(`${API_BASE}/user/count`);
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ ${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${result.error || JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+
+        async function createUser() {
+            const resultDiv = document.getElementById('createResult');
+            const codigoUsuario = document.getElementById('codigoUsuario').value;
+            const contrasena = document.getElementById('contrasena').value;
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const rol = document.getElementById('rol').value;
+
+            if (!codigoUsuario || !contrasena || !nombre || !apellido) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Código de usuario, contraseña, nombre y apellido son requeridos';
+                return;
+            }
+
+            resultDiv.textContent = 'Creando usuario...';
+            
+            const result = await makeRequest(`${API_BASE}/user/create`, 'POST', {
+                codigoUsuario,
+                contrasena,
+                nombre,
+                apellido,
+                rol,
+                fotoBase64: selectedPhotoBase64
+            });
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ ${JSON.stringify(result.data, null, 2)}`;
+                // Limpiar campos
+                document.getElementById('codigoUsuario').value = '';
+                document.getElementById('contrasena').value = '';
+                document.getElementById('nombre').value = '';
+                document.getElementById('apellido').value = '';
+                document.getElementById('rol').value = 'usuario';
+                document.getElementById('foto').value = '';
+                document.getElementById('fotoPreview').innerHTML = '';
+                selectedPhotoBase64 = null;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${result.error || JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            const codigoUsuario = document.getElementById('loginCodigo').value;
+            const contrasena = document.getElementById('loginPassword').value;
+
+            if (!codigoUsuario || !contrasena) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Código de usuario y contraseña son requeridos';
+                return;
+            }
+
+            resultDiv.textContent = 'Probando login...';
+            
+            const result = await makeRequest(`${API_BASE}/auth/login`, 'POST', {
+                codigoUsuario,
+                contrasena
+            });
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Login exitoso!\n${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Login fallido: ${result.error || JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+
+        // Probar conexión automáticamente al cargar
+        window.onload = function() {
+            setTimeout(testConnection, 1000);
+        };
+    </script>
+</body>
+</html>
