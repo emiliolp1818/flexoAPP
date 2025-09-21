@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FlexoSpringAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e092f3cb49d47d06cadaee392f00a1da35fea7b1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0952469e017384a73b1cb2dd83013a51c445276e")]
 [assembly: System.Reflection.AssemblyProductAttribute("FlexoSpringAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FlexoSpringAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

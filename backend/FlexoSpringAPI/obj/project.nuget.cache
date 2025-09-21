@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "id/hGUvFgSA=",
+  "dgSpecHash": "7uz/XgrovWs=",
   "success": true,
-  "projectFilePath": "C:\\Users\\emili\\Desktop\\programacion flexo\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
+  "projectFilePath": "C:\\Users\\emili\\Documents\\GitHub\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\emili\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\emili\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -69,10 +69,10 @@
     {
       "code": "NU1902",
       "level": "Warning",
-      "message": "El paquete \"System.IdentityModel.Tokens.Jwt\" 7.0.3 tiene una vulnerabilidad de gravedad moderada conocida, https://github.com/advisories/GHSA-59j7-ghrg-fj52",
-      "projectPath": "C:\\Users\\emili\\Desktop\\programacion flexo\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
+      "message": "Package 'System.IdentityModel.Tokens.Jwt' 7.0.3 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-59j7-ghrg-fj52",
+      "projectPath": "C:\\Users\\emili\\Documents\\GitHub\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\emili\\Desktop\\programacion flexo\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
+      "filePath": "C:\\Users\\emili\\Documents\\GitHub\\flexoAPP\\backend\\FlexoSpringAPI\\FlexoSpringAPI.csproj",
       "libraryId": "System.IdentityModel.Tokens.Jwt",
       "targetGraphs": [
         "net8.0"

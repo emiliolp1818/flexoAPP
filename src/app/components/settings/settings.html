@@ -1,0 +1,137 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+      </svg>
+      Configuraciones
+    </h1>
+    <p>Personaliza tu experiencia en Flexo Spring</p>
+  </div>
+
+  <div class="settings-content">
+    <!-- Apariencia -->
+    <div class="settings-card">
+      <h2>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-5.52-4.48-10-9-10z"/>
+        </svg>
+        Apariencia
+      </h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <label for="theme">Tema</label>
+          <span class="setting-description">Selecciona el tema de la aplicación</span>
+        </div>
+        <select id="theme" [(ngModel)]="settings.theme" class="setting-select">
+          <option value="light">Claro</option>
+          <option value="dark">Oscuro</option>
+          <option value="auto">Automático</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <label for="language">Idioma</label>
+          <span class="setting-description">Idioma de la interfaz</span>
+        </div>
+        <select id="language" [(ngModel)]="settings.language" class="setting-select">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <label>Vista Compacta</label>
+          <span class="setting-description">Reduce el espaciado entre elementos</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="settings.compactView">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div class="settings-card">
+      <h2>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+        </svg>
+        Notificaciones
+      </h2>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <label>Notificaciones del Sistema</label>
+          <span class="setting-description">Recibir notificaciones en el navegador</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="settings.notifications">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <label>Notificaciones por Email</label>
+          <span class="setting-description">Recibir notificaciones por correo electrónico</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="settings.emailNotifications">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Sistema -->
+    <div class="settings-card">
+      <h2>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+        </svg>
+        Sistema
+      </h2>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <label>Guardado Automático</label>
+          <span class="setting-description">Guardar cambios automáticamente</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" [(ngModel)]="settings.autoSave">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="settings-actions">
+      <button 
+        (click)="saveSettings()" 
+        [disabled]="isSaving()"
+        class="save-button"
+      >
+        @if (isSaving()) {
+          <div class="loading-spinner"></div>
+          Guardando...
+        } @else {
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+          Guardar Configuraciones
+        }
+      </button>
+      
+      <button (click)="resetSettings()" class="reset-button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
+        </svg>
+        Restaurar por Defecto
+      </button>
+    </div>
+  </div>
+</div>
