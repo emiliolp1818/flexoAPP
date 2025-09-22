@@ -10,10 +10,52 @@ export const routes: Routes = [
     canActivate: [loginGuard]
   },
   
-  // Dashboard (requiere autenticación)
+  // Dashboard principal (requiere autenticación)
   {
     path: 'dashboard',
     loadComponent: () => import('./components/dashboard/dashboard').then(m => m.Dashboard),
+    canActivate: [authGuard]
+  },
+
+  // Estadísticas (requiere autenticación)
+  {
+    path: 'estadisticas',
+    loadComponent: () => import('./components/estadisticas/estadisticas').then(m => m.Estadisticas),
+    canActivate: [authGuard]
+  },
+
+  // Máquinas (requiere autenticación)
+  {
+    path: 'maquinas',
+    loadComponent: () => import('./components/maquinas/maquinas').then(m => m.Maquinas),
+    canActivate: [authGuard]
+  },
+
+  // Programaciones (requiere autenticación)
+  {
+    path: 'programaciones',
+    loadComponent: () => import('./components/programaciones/programaciones').then(m => m.Programaciones),
+    canActivate: [authGuard]
+  },
+
+  // Carga de Programas (requiere autenticación)
+  {
+    path: 'carga-programas',
+    loadComponent: () => import('./components/carga-programas/carga-programas').then(m => m.CargaProgramas),
+    canActivate: [authGuard]
+  },
+
+  // Productos (requiere autenticación)
+  {
+    path: 'productos',
+    loadComponent: () => import('./components/productos/productos').then(m => m.Productos),
+    canActivate: [authGuard]
+  },
+
+  // Reportes (requiere autenticación)
+  {
+    path: 'reportes',
+    loadComponent: () => import('./components/reportes/reportes').then(m => m.Reportes),
     canActivate: [authGuard]
   },
   
@@ -30,17 +72,24 @@ export const routes: Routes = [
     loadComponent: () => import('./components/settings/settings').then(m => m.Settings),
     canActivate: [authGuard]
   },
+
+  // Prueba de conexión (requiere autenticación)
+  {
+    path: 'test-connection',
+    loadComponent: () => import('./components/test-connection/test-connection').then(m => m.TestConnection),
+    canActivate: [authGuard]
+  },
   
-  // Ruta por defecto redirige al login
+  // Ruta por defecto redirige al dashboard si está autenticado, sino al login
   {
     path: '',
-    redirectTo: '/login',
+    redirectTo: '/dashboard',
     pathMatch: 'full'
   },
   
-  // Rutas no encontradas redirigen al login
+  // Rutas no encontradas redirigen al dashboard
   {
     path: '**',
-    redirectTo: '/login'
+    redirectTo: '/dashboard'
   }
 ];

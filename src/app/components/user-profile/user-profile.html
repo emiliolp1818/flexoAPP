@@ -1,7 +1,28 @@
 <div class="profile-container">
   <div class="profile-header">
     <div class="profile-avatar-section">
-      <img [src]="getUserPhotoUrl()" alt="Foto de perfil" class="profile-avatar-large">
+      <div class="avatar-container">
+        <img [src]="getUserPhotoUrl()" alt="Foto de perfil" class="profile-avatar-large">
+        <div class="avatar-overlay">
+          <input 
+            type="file" 
+            id="photo-upload" 
+            accept="image/*" 
+            (change)="onPhotoSelected($event)"
+            class="photo-input"
+            [disabled]="isUploadingPhoto()"
+          >
+          <label for="photo-upload" class="photo-upload-button" [class.uploading]="isUploadingPhoto()">
+            @if (isUploadingPhoto()) {
+              <div class="loading-spinner-small"></div>
+            } @else {
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+              </svg>
+            }
+          </label>
+        </div>
+      </div>
       <h1>Mi Perfil</h1>
     </div>
     

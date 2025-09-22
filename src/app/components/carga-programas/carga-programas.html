@@ -1,0 +1,123 @@
+<app-header></app-header>
+
+<div class="carga-programas-container">
+  <app-page-banner
+    title="Carga Masiva de Programas"
+    subtitle="Cargar 10 programas de producción a cada máquina seleccionada"
+  >
+  </app-page-banner>
+
+  <div class="content-wrapper">
+    <!-- Selección de Máquinas -->
+    <div class="machines-section">
+      <div class="section-header">
+        <h3>Seleccionar Máquinas</h3>
+        <div class="selection-controls">
+          <button class="btn btn-secondary" (click)="selectAllMachines()">Seleccionar Todas</button>
+          <button class="btn btn-outline" (click)="clearSelection()">Limpiar Selección</button>
+        </div>
+      </div>
+
+      <div class="machines-grid">
+        @for (machine of machines(); track machine.numero) {
+        <div
+          class="machine-card"
+          [class.selected]="selectedMachines().includes(machine.numero)"
+          (click)="toggleMachineSelection(machine.numero)"
+        >
+          <div class="machine-header">
+            <span class="machine-number">{{ machine.numero }}</span>
+            <span class="machine-status" [class]="machine.estado">
+              {{ machine.estado }}
+            </span>
+          </div>
+          <div class="machine-name">{{ machine.nombre }}</div>
+          <div class="machine-stats">
+            <span>Eficiencia: {{ machine.eficiencia }}%</span>
+            <span>Horas: {{ machine.horasOperacion }}h</span>
+          </div>
+          @if (selectedMachines().includes(machine.numero)) {
+          <div class="selected-indicator">✓</div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Resumen y Acción -->
+    <div class="action-section">
+      <div class="summary-card">
+        <h4>Resumen de Carga</h4>
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="label">Máquinas seleccionadas:</span>
+            <span class="value">{{ selectedMachinesCount() }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Total programas a cargar:</span>
+            <span class="value">{{ totalProgramsToLoad() }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Programas por máquina:</span>
+            <span class="value">10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-controls">
+        @if (!isLoading()) {
+        <button
+          class="btn btn-primary btn-large"
+          (click)="loadProgramsToMachines()"
+          [disabled]="selectedMachinesCount() === 0"
+        >
+          <span class="btn-icon">📋</span>
+          Cargar Programas de Producción
+        </button>
+        } @else {
+        <div class="loading-section">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="loadingProgress()"></div>
+          </div>
+          <p class="loading-text">
+            Cargando programas... {{ loadingProgress() | number : '1.0-0' }}%
+          </p>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+<!-- M
+odal de Éxito -->
+@if (showSuccessModal()) {
+<div class="modal-overlay" (click)="closeSuccessModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>✅ Carga Completada</h3>
+      <button class="close-btn" (click)="closeSuccessModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="success-message">
+        Se han cargado exitosamente <strong>{{ loadedPrograms().length }}</strong> programas de
+        producción en <strong>{{ selectedMachinesCount() }}</strong> máquinas.
+      </p>
+
+      <div class="loaded-summary">
+        <h4>Programas Cargados por Máquina:</h4>
+        @for (machineNum of selectedMachines(); track machineNum) {
+        <div class="machine-summary">
+          <span class="machine-label">Máquina {{ machineNum }}:</span>
+          <span class="program-count">10 programas</span>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="closeSuccessModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+}

@@ -1,0 +1,274 @@
+<div class="maquinas-page">
+<div class="maquinas-page">
+  <app-header></app-header>
+
+  <div class="page-content">
+    <app-page-banner
+      title="Gestión de Máquinas"
+      subtitle="Control y monitoreo de máquinas de producción"
+      icon="🏭"
+    ></app-page-banner>
+
+    <div class="machines-layout">
+      <!-- Lista de máquinas simplificada -->
+      <div class="machines-sidebar">
+        <h2>🏭 Máquinas</h2>
+        <div class="machines-list">
+          @for (machine of machines(); track machine.numero) {
+          <div
+            class="machine-item"
+            [class]="machine.estado"
+            [class.selected]="selectedMachine() === machine.numero"
+            (click)="selectMachine(machine.numero)"
+          >
+            <div class="machine-number">{{ machine.numero }}</div>
+            @if (machine.estado === 'activa') {
+            <div class="machine-efficiency">{{ machine.eficiencia }}%</div>
+            } @else {
+            <div class="machine-status">{{ machine.estado }}</div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Tabla de órdenes de trabajo -->
+      <div class="orders-main">
+        @if (selectedMachine()) {
+        <div class="orders-header">
+          <h2>📋 Programa de Producción - Máquina #{{ selectedMachine() }}</h2>
+          <div class="orders-summary">
+            <span class="summary-item">Total: {{ selectedMachineOrders().length }} programas</span>
+            <span class="summary-item">Activos: {{ getActiveOrdersCount() }}</span>
+            <button class="create-test-data-btn" (click)="createTestDataForMachine()" title="Crear datos de prueba">
+              + Crear Datos de Prueba
+            </button>
+          </div>
+        </div>
+
+        <div class="orders-table-container">
+          @if (selectedMachineOrders().length > 0) {
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Artículo</th>
+                  <th>OT SAP</th>
+                  <th>Cliente</th>
+                  <th>Referencia</th>
+                  <th>TD</th>
+                  <th>Colores</th>
+                  <th>Sustrato</th>
+                  <th>Kilos</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of selectedMachineOrders(); track order.id) {
+                  <tr class="order-row" [class]="order.estado">
+                    <td>{{ order.articulo }}</td>
+                    <td>{{ order.otSap }}</td>
+                    <td>{{ order.cliente }}</td>
+                    <td>{{ order.referencia }}</td>
+                    <td>{{ order.td }}</td>
+                    <td>
+                      <div class="colors-cell">
+                        <span class="color-count">{{ order.colores }}</span>
+                        <button 
+                          class="color-toggle-btn" 
+                          (click)="toggleColors(order.id)"
+                          [class.expanded]="expandedColorRow() === order.id"
+                        >
+                          {{ expandedColorRow() === order.id ? '▼' : '▶' }}
+                        </button>
+                      </div>
+                    </td>
+                    <td>{{ order.sustrato }}</td>
+                    <td class="kilos-cell">{{ order.kilos | number:'1.0-0' }} kg</td>
+                    <td>
+                      <span class="status-badge" [class]="order.estado">{{ order.estado }}</span>
+                      @if (order.motivoSuspension) {
+                        <div class="suspension-reason">{{ order.motivoSuspension }}</div>
+                      }
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button 
+                          class="status-btn listo" 
+                          [disabled]="order.estado === 'listo'"
+                          (click)="changeOrderStatus(order.id, 'listo')"
+                          title="Listo"
+                        >
+                          ✓
+                        </button>
+                        <button 
+                          class="status-btn suspendido" 
+                          [disabled]="order.estado === 'suspendido'"
+                          (click)="changeOrderStatus(order.id, 'suspendido')"
+                          title="Suspender"
+                        >
+                          ⏸
+                        </button>
+                        <button 
+                          class="status-btn corriendo" 
+                          [disabled]="order.estado === 'corriendo'"
+                          (click)="changeOrderStatus(order.id, 'corriendo')"
+                          title="Corriendo"
+                        >
+                          ▶
+                        </button>
+                        <button 
+                          class="status-btn terminado" 
+                          [disabled]="order.estado === 'terminado'"
+                          (click)="changeOrderStatus(order.id, 'terminado')"
+                          title="Terminado"
+                        >
+                          ■
+                        </button>
+                        
+                        @if (order.estado === 'suspendido') {
+                          <button 
+                            class="reset-btn" 
+                            (click)="requestPasswordChange(order.id)"
+                            title="Resetear Estado (Admin)"
+                          >
+                            🔓
+                          </button>
+                        }
+                        
+                        <button 
+                          class="action-btn print" 
+                          (click)="printOrder(order.id)" 
+                          title="Imprimir"
+                        >
+                          🖨️
+                        </button>
+                        <button 
+                          class="action-btn edit" 
+                          (click)="editOrder(order.id)" 
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          class="action-btn duplicate" 
+                          (click)="duplicateOrder(order.id)" 
+                          title="Duplicar"
+                        >
+                          📋
+                        </button>
+                        <button 
+                          class="action-btn delete" 
+                          (click)="deleteOrder(order.id)" 
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  @if (expandedColorRow() === order.id) {
+                    <tr class="color-details-row">
+                      <td colspan="10">
+                        <div class="color-details">
+                          <strong>Paleta de Colores del Pedido:</strong>
+                          <div class="color-palette">
+                            @for (color of order.coloresDetalle; track color.nombre) {
+                              <div class="color-item">
+                                <div 
+                                  class="color-swatch" 
+                                  [style.background-color]="color.hex"
+                                  [class.white-border]="color.hex === '#FFFFFF'"
+                                ></div>
+                                <div class="color-info">
+                                  <span class="color-name">{{ color.nombre }}</span>
+                                  <span class="color-type" [class]="color.tipo">
+                                    {{ color.tipo === 'pantone' ? 'PANTONE' : 'PRIMARIO' }}
+                                  </span>
+                                  <span class="color-hex">{{ color.hex }}</span>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="no-orders">
+              <div class="no-orders-icon">📋</div>
+              <h3>Sin programas de producción</h3>
+              <p>Esta máquina no tiene programas asignados actualmente</p>
+            </div>
+          }
+        </div>
+        } @else {
+        <div class="select-machine-prompt">
+          <div class="prompt-icon">👈</div>
+          <h3>Selecciona una máquina</h3>
+          <p>Haz clic en una máquina de la lista para ver su programa de producción</p>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para motivo de suspensión -->
+  @if (showSuspensionModal()) {
+    <div class="modal-overlay" (click)="closeSuspensionModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Motivo de Suspensión</h3>
+          <button class="close-button" (click)="closeSuspensionModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label for="suspensionReason">Ingrese el motivo de la suspensión:</label>
+          <textarea 
+            id="suspensionReason"
+            [(ngModel)]="suspensionReason"
+            placeholder="Ej: Falta de material, problema técnico, etc."
+            rows="4"
+            class="form-textarea"
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="closeSuspensionModal()">Cancelar</button>
+          <button class="confirm-btn" (click)="confirmSuspension()" [disabled]="!suspensionReason().trim()">
+            Confirmar Suspensión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal para contraseña de admin -->
+  @if (showPasswordModal()) {
+    <div class="modal-overlay" (click)="closePasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Contraseña de Administrador</h3>
+          <button class="close-button" (click)="closePasswordModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label for="adminPassword">Ingrese la contraseña de administrador:</label>
+          <input 
+            type="password"
+            id="adminPassword"
+            [(ngModel)]="adminPassword"
+            placeholder="••••••••"
+            class="form-input"
+          >
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="closePasswordModal()">Cancelar</button>
+          <button class="confirm-btn" (click)="validatePasswordAndReset()" [disabled]="!adminPassword().trim()">
+            Resetear Estado
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

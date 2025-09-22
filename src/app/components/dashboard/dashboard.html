@@ -1,44 +1,284 @@
 <div class="dashboard">
   <app-header></app-header>
   
-  <div class="dashboard-content">
-    <aside class="sidebar">
-      <h2>Flexo Spring</h2>
-      <nav>
-        <ul>
-          <li><a href="#">📊 Dashboard</a></li>
-          <li><a href="#">👥 Usuarios</a></li>
-          <li><a href="#">📦 Productos</a></li>
-          <li><a href="#">📋 Reportes</a></li>
-          <li><a href="#">⚙️ Configuración</a></li>
-        </ul>
-      </nav>
-    </aside>
+  <div class="dashboard-content-wrapper">
+    <div class="dashboard-content">
+      <!-- Sección de bienvenida mejorada -->
+    <div class="welcome-section">
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <h1>¡Bienvenido {{ userName() }}!</h1>
+          <p>Sistema de gestión de empaques flexibles - Flexo Spring</p>
+          <div class="quick-stats">
+            <div class="quick-stat">
+              <span class="quick-stat-icon">🏭</span>
+              <span class="quick-stat-text">{{ activeMachinesCount() }} Máquinas Activas</span>
+            </div>
+            <div class="quick-stat">
+              <span class="quick-stat-icon">📋</span>
+              <span class="quick-stat-text">{{ workOrders().length }} Órdenes Activas</span>
+            </div>
+            <div class="quick-stat">
+              <span class="quick-stat-icon">⚡</span>
+              <span class="quick-stat-text">{{ orderData().eficiencia }}% Eficiencia</span>
+            </div>
+          </div>
+        </div>
+        <div class="welcome-visual">
+          <div class="dashboard-icon">📊</div>
+        </div>
+      </div>
+    </div>
 
-    <main class="main-content">
-      <div class="welcome-section">
-        <h1>¡Bienvenido a Flexo Spring!</h1>
-        <p>Sistema de gestión de empaques flexibles</p>
+    <!-- Resumen ejecutivo -->
+    <div class="executive-summary">
+      <h2>📈 Resumen Ejecutivo</h2>
+      <div class="summary-cards">
+        <div class="summary-card production-summary">
+          <div class="summary-icon">🏭</div>
+          <div class="summary-info">
+            <h3>Producción</h3>
+            <p>{{ productionData().tinasProducidas }} tinas fabricadas este mes</p>
+            <div class="summary-trend positive">↗️ +12% vs mes anterior</div>
+          </div>
+        </div>
+        <div class="summary-card efficiency-summary">
+          <div class="summary-icon">⚡</div>
+          <div class="summary-info">
+            <h3>Eficiencia</h3>
+            <p>{{ orderData().eficiencia }}% promedio general</p>
+            <div class="summary-trend positive">↗️ +3% vs mes anterior</div>
+          </div>
+        </div>
+        <div class="summary-card quality-summary">
+          <div class="summary-icon">✅</div>
+          <div class="summary-info">
+            <h3>Calidad</h3>
+            <p>98.5% productos sin defectos</p>
+            <div class="summary-trend stable">→ Estable</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjetas de estadísticas detalladas -->
+    <div class="detailed-stats">
+      <h2>📊 Estadísticas Detalladas</h2>
+      <div class="stats-grid">
+      <!-- 1. Datos de Producción -->
+      <div class="stat-card production">
+        <div class="card-header">
+          <h3>📈 Datos de Producción</h3>
+          <span class="period">{{ productionData().mes }}</span>
+        </div>
+        <div class="card-content">
+          <div class="stat-item">
+            <div class="stat-value">{{ productionData().tinasProducidas }}</div>
+            <div class="stat-label">Tinas Fabricadas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ productionData().kilosProducidos | number:'1.0-0' }}</div>
+            <div class="stat-label">Kilos Producidos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ productionData().tintasGastadas }}</div>
+            <div class="stat-label">Tintas Gastadas (L)</div>
+          </div>
+        </div>
       </div>
 
-      <section class="widgets">
-        <div class="widget">
-          <h3>📊 Estadísticas</h3>
-          <p>Resumen de actividad</p>
+      <!-- 2. Datos de Pedidos -->
+      <div class="stat-card orders">
+        <div class="card-header">
+          <h3>🚀 Eficiencia de Pedidos</h3>
+          <span class="efficiency">{{ orderData().eficiencia }}% eficiencia</span>
         </div>
-        <div class="widget">
-          <h3>📦 Productos</h3>
-          <p>Gestión de inventario</p>
+        <div class="card-content">
+          <div class="stat-item featured">
+            <div class="stat-value">{{ orderData().maquinaMasEficiente }}</div>
+            <div class="stat-label">Máquina Más Eficiente</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ orderData().tiempoPromedio }} min</div>
+            <div class="stat-label">Tiempo Promedio Cambio</div>
+          </div>
         </div>
-        <div class="widget">
-          <h3>👥 Usuarios</h3>
-          <p>Administración de usuarios</p>
+      </div>
+
+      <!-- 3. Tiempos de Máquina -->
+      <div class="stat-card machine-times">
+        <div class="card-header">
+          <h3>⏱️ Tiempos de Ajuste</h3>
+          <span class="subtitle">Top 3 Mejores</span>
         </div>
-        <div class="widget">
-          <h3>🔔 Notificaciones</h3>
-          <p>Alertas del sistema</p>
+        <div class="card-content">
+          @for (machine of machinesTimes(); track machine.maquina) {
+            <div class="machine-item" [class]="'position-' + machine.posicion">
+              <div class="machine-rank">#{{ machine.posicion }}</div>
+              <div class="machine-info">
+                <div class="machine-name">{{ machine.maquina }}</div>
+                <div class="machine-time">{{ machine.tiempoAjuste }} min</div>
+              </div>
+            </div>
+          }
         </div>
-      </section>
-    </main>
+      </div>
+
+      <!-- 4. Tiempos por Fallas -->
+      <div class="stat-card failures">
+        <div class="card-header">
+          <h3>⚠️ Tiempos por Fallas</h3>
+          <span class="subtitle">Paradas por Falta de Tinta</span>
+        </div>
+        <div class="card-content">
+          @for (failure of failureTimes(); track failure.maquina) {
+            <div class="failure-item">
+              <div class="failure-machine">{{ failure.maquina }}</div>
+              <div class="failure-details">
+                <div class="failure-time">{{ failure.tiempoParada }}h</div>
+                <div class="failure-cause">{{ failure.causa }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="quick-actions">
+      <h2>🚀 Accesos Rápidos</h2>
+      <div class="navigation-buttons">
+        <button class="nav-button estadisticas" (click)="navigateTo('/estadisticas')">
+          <div class="nav-icon">📊</div>
+          <div class="nav-content">
+            <span class="nav-title">Estadísticas</span>
+            <span class="nav-description">Análisis de rendimiento</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button maquinas" (click)="navigateTo('/maquinas')">
+          <div class="nav-icon">🏭</div>
+          <div class="nav-content">
+            <span class="nav-title">Máquinas</span>
+            <span class="nav-description">Control de producción</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button programaciones" (click)="navigateTo('/programaciones')">
+          <div class="nav-icon">📅</div>
+          <div class="nav-content">
+            <span class="nav-title">Programaciones</span>
+            <span class="nav-description">Horarios y turnos</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button productos" (click)="navigateTo('/productos')">
+          <div class="nav-icon">📦</div>
+          <div class="nav-content">
+            <span class="nav-title">Productos</span>
+            <span class="nav-description">Catálogo e inventario</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button reportes" (click)="navigateTo('/reportes')">
+          <div class="nav-icon">📋</div>
+          <div class="nav-content">
+            <span class="nav-title">Reportes</span>
+            <span class="nav-description">Análisis y exportación</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button carga-programas" (click)="navigateTo('/carga-programas')">
+          <div class="nav-icon">📋</div>
+          <div class="nav-content">
+            <span class="nav-title">Carga de Programas</span>
+            <span class="nav-description">Cargar 10 programas por máquina</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button configuracion" (click)="navigateTo('/settings')">
+          <div class="nav-icon">⚙️</div>
+          <div class="nav-content">
+            <span class="nav-title">Configuración</span>
+            <span class="nav-description">Ajustes del sistema</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+        
+        <button class="nav-button test-connection" (click)="navigateTo('/test-connection')">
+          <div class="nav-icon">🔧</div>
+          <div class="nav-content">
+            <span class="nav-title">Prueba BD</span>
+            <span class="nav-description">Probar conexión a base de datos</span>
+          </div>
+          <div class="nav-arrow">→</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para motivo de suspensión -->
+  @if (showSuspensionModal()) {
+    <div class="modal-overlay" (click)="closeSuspensionModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Motivo de Suspensión</h3>
+          <button class="close-button" (click)="closeSuspensionModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label for="suspensionReason">Ingrese el motivo de la suspensión:</label>
+          <textarea 
+            id="suspensionReason"
+            [(ngModel)]="suspensionReason"
+            placeholder="Ej: Falta de material, problema técnico, etc."
+            rows="4"
+            class="form-textarea"
+          ></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="closeSuspensionModal()">Cancelar</button>
+          <button class="confirm-btn" (click)="confirmSuspension()" [disabled]="!suspensionReason().trim()">
+            Confirmar Suspensión
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal para contraseña de admin -->
+  @if (showPasswordModal()) {
+    <div class="modal-overlay" (click)="closePasswordModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Contraseña de Administrador</h3>
+          <button class="close-button" (click)="closePasswordModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label for="adminPassword">Ingrese la contraseña de administrador:</label>
+          <input 
+            type="password"
+            id="adminPassword"
+            [(ngModel)]="adminPassword"
+            placeholder="••••••••"
+            class="form-input"
+          >
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" (click)="closePasswordModal()">Cancelar</button>
+          <button class="confirm-btn" (click)="validatePasswordAndReset()" [disabled]="!adminPassword().trim()">
+            Resetear Estado
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+    </div>
   </div>
 </div>

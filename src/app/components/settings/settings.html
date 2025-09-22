@@ -1,4 +1,6 @@
 <div class="settings-container">
+  <app-header></app-header>
+  
   <div class="settings-header">
     <h1>
       <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
@@ -9,7 +11,27 @@
     <p>Personaliza tu experiencia en Flexo Spring</p>
   </div>
 
+  <!-- Pestañas de navegación -->
+  <div class="settings-tabs">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab() === 'general'"
+      (click)="setActiveTab('general')"
+    >
+      ⚙️ General
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab() === 'users'"
+      (click)="setActiveTab('users')"
+    >
+      👥 Usuarios
+    </button>
+  </div>
+
   <div class="settings-content">
+    <!-- Pestaña General -->
+    @if (activeTab() === 'general') {
     <!-- Apariencia -->
     <div class="settings-card">
       <h2>
@@ -108,30 +130,212 @@
       </div>
     </div>
 
-    <!-- Acciones -->
-    <div class="settings-actions">
-      <button 
-        (click)="saveSettings()" 
-        [disabled]="isSaving()"
-        class="save-button"
-      >
-        @if (isSaving()) {
-          <div class="loading-spinner"></div>
-          Guardando...
-        } @else {
+      <!-- Acciones -->
+      <div class="settings-actions">
+        <button 
+          (click)="saveSettings()" 
+          [disabled]="isSaving()"
+          class="save-button"
+        >
+          @if (isSaving()) {
+            <div class="loading-spinner"></div>
+            Guardando...
+          } @else {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+            Guardar Configuraciones
+          }
+        </button>
+        
+        <button (click)="resetSettings()" class="reset-button">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
           </svg>
-          Guardar Configuraciones
-        }
-      </button>
-      
-      <button (click)="resetSettings()" class="reset-button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/>
-        </svg>
-        Restaurar por Defecto
-      </button>
-    </div>
+          Restaurar por Defecto
+        </button>
+      </div>
+    }
+
+    <!-- Pestaña Usuarios -->
+    @if (activeTab() === 'users') {
+      <div class="users-section">
+        <div class="users-header">
+          <h2>👥 Gestión de Usuarios</h2>
+          <button class="add-user-button" (click)="openAddUserModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            Agregar Usuario
+          </button>
+        </div>
+
+        <div class="users-table">
+          <div class="table-header">
+            <div class="header-cell">Usuario</div>
+            <div class="header-cell">Nombre</div>
+            <div class="header-cell">Rol</div>
+            <div class="header-cell">Estado</div>
+            <div class="header-cell">Acciones</div>
+          </div>
+
+          @for (user of users(); track user.codigoUsuario) {
+            <div class="table-row">
+              <div class="table-cell">
+                <div class="user-code">{{ user.codigoUsuario }}</div>
+              </div>
+              <div class="table-cell">
+                <div class="user-name">{{ user.nombre }} {{ user.apellido }}</div>
+              </div>
+              <div class="table-cell">
+                <span class="role-badge" [class]="user.rol.toLowerCase()">
+                  {{ user.rol }}
+                </span>
+              </div>
+              <div class="table-cell">
+                <span class="status-badge" [class]="user.activo ? 'active' : 'inactive'">
+                  {{ user.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+              <div class="table-cell actions">
+                <button 
+                  class="action-button toggle"
+                  (click)="toggleUserStatus(user.codigoUsuario)"
+                  [title]="user.activo ? 'Desactivar' : 'Activar'"
+                >
+                  @if (user.activo) {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/>
+                    </svg>
+                  } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                  }
+                </button>
+                <button 
+                  class="action-button delete"
+                  (click)="deleteUser(user.codigoUsuario)"
+                  title="Eliminar"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
   </div>
+
+  <!-- Modal Agregar Usuario -->
+  @if (showAddUserModal()) {
+    <div class="modal-overlay" (click)="closeAddUserModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Agregar Nuevo Usuario</h3>
+          <button class="close-button" (click)="closeAddUserModal()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+
+        <form class="user-form" (ngSubmit)="addUser()">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="codigoUsuario">Código de Usuario</label>
+              <input 
+                type="text" 
+                id="codigoUsuario"
+                [(ngModel)]="newUser.codigoUsuario"
+                name="codigoUsuario"
+                required
+                class="form-input"
+                placeholder="Ej: jperez"
+              >
+            </div>
+            <div class="form-group">
+              <label for="rol">Rol</label>
+              <select 
+                id="rol"
+                [(ngModel)]="newUser.rol"
+                name="rol"
+                class="form-input"
+              >
+                <option value="Usuario">Usuario</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Supervisor">Supervisor</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input 
+                type="text" 
+                id="nombre"
+                [(ngModel)]="newUser.nombre"
+                name="nombre"
+                required
+                class="form-input"
+                placeholder="Nombre"
+              >
+            </div>
+            <div class="form-group">
+              <label for="apellido">Apellido</label>
+              <input 
+                type="text" 
+                id="apellido"
+                [(ngModel)]="newUser.apellido"
+                name="apellido"
+                required
+                class="form-input"
+                placeholder="Apellido"
+              >
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contrasena">Contraseña</label>
+              <input 
+                type="password" 
+                id="contrasena"
+                [(ngModel)]="newUser.contrasena"
+                name="contrasena"
+                required
+                class="form-input"
+                placeholder="••••••••"
+              >
+            </div>
+            <div class="form-group">
+              <label for="confirmarContrasena">Confirmar Contraseña</label>
+              <input 
+                type="password" 
+                id="confirmarContrasena"
+                [(ngModel)]="newUser.confirmarContrasena"
+                name="confirmarContrasena"
+                required
+                class="form-input"
+                placeholder="••••••••"
+              >
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="cancel-button" (click)="closeAddUserModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="create-button">
+              Crear Usuario
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>
