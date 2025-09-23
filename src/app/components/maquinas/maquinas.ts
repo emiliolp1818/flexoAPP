@@ -23,7 +23,7 @@ export class Maquinas implements OnInit {
   selectedWorkOrder = signal<WorkOrder | null>(null);
   adminPassword = signal('');
   showPasswordModal = signal(false);
-  expandedColorRow = signal<number | null>(null);
+  hoveredOrderId = signal<number | null>(null);
   
   // Signals reactivos conectados al servicio
   machines = signal<Machine[]>([]);
@@ -115,7 +115,7 @@ export class Maquinas implements OnInit {
     ];
     
     const numColors = Math.floor(Math.random() * 6) + 2; // Entre 2 y 8 colores
-    const selectedColors = [];
+    const selectedColors: { nombre: string; hex: string; tipo: 'primario' | 'pantone' }[] = [];
     
     for (let i = 0; i < numColors && i < allColors.length; i++) {
       const randomIndex = Math.floor(Math.random() * allColors.length);
@@ -140,13 +140,13 @@ export class Maquinas implements OnInit {
     return this.selectedMachineOrders().filter(o => o.estado === 'corriendo').length;
   }
 
-  // Método para toggle de colores
-  toggleColors(orderId: number) {
-    if (this.expandedColorRow() === orderId) {
-      this.expandedColorRow.set(null);
-    } else {
-      this.expandedColorRow.set(orderId);
-    }
+  // Métodos para mostrar/ocultar paleta de colores
+  showColorPalette(orderId: number) {
+    this.hoveredOrderId.set(orderId);
+  }
+
+  hideColorPalette() {
+    this.hoveredOrderId.set(null);
   }
 
   // Crear datos de prueba para la máquina seleccionada

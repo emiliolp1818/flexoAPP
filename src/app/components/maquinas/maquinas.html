@@ -72,15 +72,37 @@
                     <td>{{ order.referencia }}</td>
                     <td>{{ order.td }}</td>
                     <td>
-                      <div class="colors-cell">
+                      <div class="colors-cell" 
+                           (mouseenter)="showColorPalette(order.id)" 
+                           (mouseleave)="hideColorPalette()">
                         <span class="color-count">{{ order.colores }}</span>
-                        <button 
-                          class="color-toggle-btn" 
-                          (click)="toggleColors(order.id)"
-                          [class.expanded]="expandedColorRow() === order.id"
-                        >
-                          {{ expandedColorRow() === order.id ? '▼' : '▶' }}
-                        </button>
+                        <div class="color-preview">
+                          @for (color of order.coloresDetalle.slice(0, 3); track color.nombre) {
+                            <div class="color-dot" 
+                                 [style.background-color]="color.hex"
+                                 [class.white-border]="color.hex === '#FFFFFF'">
+                            </div>
+                          }
+                          @if (order.colores > 3) {
+                            <span class="more-colors">+{{ order.colores - 3 }}</span>
+                          }
+                        </div>
+                        
+                        @if (hoveredOrderId() === order.id) {
+                          <div class="color-tooltip">
+                            <div class="color-palette-mini">
+                              @for (color of order.coloresDetalle; track color.nombre) {
+                                <div class="color-item-mini">
+                                  <div class="color-swatch-mini" 
+                                       [style.background-color]="color.hex"
+                                       [class.white-border]="color.hex === '#FFFFFF'">
+                                  </div>
+                                  <span class="color-name-mini">{{ color.nombre }}</span>
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
                       </div>
                     </td>
                     <td>{{ order.sustrato }}</td>
@@ -167,33 +189,7 @@
                       </div>
                     </td>
                   </tr>
-                  @if (expandedColorRow() === order.id) {
-                    <tr class="color-details-row">
-                      <td colspan="10">
-                        <div class="color-details">
-                          <strong>Paleta de Colores del Pedido:</strong>
-                          <div class="color-palette">
-                            @for (color of order.coloresDetalle; track color.nombre) {
-                              <div class="color-item">
-                                <div 
-                                  class="color-swatch" 
-                                  [style.background-color]="color.hex"
-                                  [class.white-border]="color.hex === '#FFFFFF'"
-                                ></div>
-                                <div class="color-info">
-                                  <span class="color-name">{{ color.nombre }}</span>
-                                  <span class="color-type" [class]="color.tipo">
-                                    {{ color.tipo === 'pantone' ? 'PANTONE' : 'PRIMARIO' }}
-                                  </span>
-                                  <span class="color-hex">{{ color.hex }}</span>
-                                </div>
-                              </div>
-                            }
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  }
+
                 }
               </tbody>
             </table>
