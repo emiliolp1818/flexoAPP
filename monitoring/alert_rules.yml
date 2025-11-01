@@ -1,0 +1,130 @@
+groups:
+  - name: flexoauth_alerts
+    rules:
+      # Alertas de disponibilidad
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servicio {{ $labels.job }} está caído"
+          description: "El servicio {{ $labels.job }} en {{ $labels.instance }} ha estado caído por más de 1 minuto."
+
+      # Alertas de rendimiento
+      - alert: HighResponseTime
+        expr: http_request_duration_seconds{quantile="0.95"} > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tiempo de respuesta alto en {{ $labels.job }}"
+          description: "El percentil 95 del tiempo de respuesta es {{ $value }}s en {{ $labels.instance }}."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alta tasa de errores en {{ $labels.job }}"
+          description: "La tasa de errores 5xx es {{ $value | humanizePercentage }} en {{ $labels.instance }}."
+
+      # Alertas de memoria
+      - alert: HighMemoryUsage
+        expr: process_working_set_bytes / (1024*1024*1024) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Uso alto de memoria en {{ $labels.job }}"
+          description: "El uso de memoria es {{ $value | humanize }}GB en {{ $labels.instance }}."
+
+      # Alertas de caché
+      - alert: LowCacheHitRate
+        expr: cache_hit_rate < 70
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Baja tasa de aciertos de caché"
+          description: "La tasa de aciertos de caché es {{ $value }}% en {{ $labels.instance }}."
+
+      # Alertas de base de datos
+      - alert: SlowDatabaseQueries
+        expr: database_query_duration_seconds{quantile="0.95"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consultas lentas en base de datos"
+          description: "El percentil 95 de duración de consultas es {{ $value }}s."
+
+      # Alertas de conexiones
+      - alert: HighConnectionCount
+        expr: database_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto número de conexiones a base de datos"
+          description: "Hay {{ $value }} conexiones activas a la base de datos."
+
+      # Alertas de disco
+      - alert: LowDiskSpace
+        expr: disk_free_bytes / disk_total_bytes < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Poco espacio en disco"
+          description: "Queda menos del 10% de espacio libre en disco en {{ $labels.instance }}."
+
+      # Alertas de Redis
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis está caído"
+          description: "Redis no está disponible en {{ $labels.instance }}."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto uso de memoria en Redis"
+          description: "Redis está usando {{ $value | humanizePercentage }} de su memoria máxima."
+
+  - name: business_alerts
+    rules:
+      # Alertas de negocio
+      - alert: HighLoginFailureRate
+        expr: rate(login_attempts_total{status="failed"}[5m]) / rate(login_attempts_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alta tasa de fallos de login"
+          description: "La tasa de fallos de login es {{ $value | humanizePercentage }}."
+
+      - alert: UnusualUserActivity
+        expr: rate(user_actions_total[1h]) > 1000
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Actividad inusual de usuarios"
+          description: "Se detectó actividad inusual: {{ $value }} acciones por hora."
+
+      - alert: NoUserRegistrations
+        expr: increase(user_registrations_total[1h]) == 0
+        for: 2h
+        labels:
+          severity: info
+        annotations:
+          summary: "Sin registros de usuarios"
+          description: "No ha habido registros de usuarios en las últimas 2 horas."

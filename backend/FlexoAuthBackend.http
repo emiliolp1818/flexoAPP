@@ -1,0 +1,6 @@
+@FlexoAuthBackend_HostAddress = http://localhost:5137
+
+GET {{FlexoAuthBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
