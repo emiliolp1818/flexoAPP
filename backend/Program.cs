@@ -4,44 +4,49 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FlexoAuthBackend.Data;
 using FlexoAuthBackend.Services;
-using FlexoAuthBackend.Configuration;
 using Serilog;
-using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using System.Diagnostics;
-using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar logging con Serilog
-builder.Services.ConfigureSerilog(builder.Configuration, builder.Environment);
+// Configurar Serilog básico
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/flexoauth-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 try
 {
     Log.Information("Iniciando FlexoAuthBackend...");
 
-    // Configurar servicios básicos
+    // Servicios básicos
     builder.Services.AddControllers();
     builder.Services.AddHttpContextAccessor();
 
-    // Configurar base de datos con optimizaciones
-    builder.Services.ConfigureDatabase(builder.Configuration, builder.Environment);
-    builder.Services.ConfigureSharding(builder.Configuration);
+    // Base de datos
+    var connectionString = builder.Configuration.GetConnectionString("FlexoBD");
+    builder.Services.AddDbContext<FlexoDbContext>(options =>
+        options.UseSqlServer(connectionString));
 
-    // Configurar caché (Memory + Redis)
-    builder.Services.ConfigureCache(builder.Configuration);
-
-    // Configurar escalabilidad
-    builder.Services.ConfigureScalability(builder.Configuration);
-    builder.Services.ConfigureLoadBalancing(builder.Configuration);
-
-    // Configurar monitoreo
-    builder.Services.ConfigureApplicationInsights(builder.Configuration);
-    builder.Services.ConfigureMiniProfiler(builder.Configuration);
-    builder.Services.ConfigureHealthChecks(builder.Configuration);
+    // Caché Redis
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+    if (!string.IsNullOrEmpty(redisConnectionString))
+    {
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+        });
+    }
+    else
+    {
+        builder.Services.AddMemoryCache();
+    }
 
     // JWT Authentication
-    var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+    var jwtKey = builder.Configuration["Jwt:Key"] ?? "FlexoAuthSecretKey2024!@#$%^&*()_+SuperSecure";
     var key = Encoding.ASCII.GetBytes(jwtKey);
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -51,37 +56,21 @@ try
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidateAudience = true,
-                ValidAudience = builder.Configuration["Jwt:Audience"],
+                ValidateIssuer = false,
+                ValidateAudience = false,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             };
         });
 
-    // CORS optimizado
+    // CORS
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAngular", policy =>
+        options.AddPolicy("AllowAll", policy =>
         {
-            if (builder.Environment.EnvironmentName == "Network" || builder.Environment.IsDevelopment())
-            {
-                policy.AllowAnyOrigin()
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-            }
-            else
-            {
-                // En producción, configurar orígenes específicos
-                var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-                    ?? new[] { "https://flexoapp.com", "https://www.flexoapp.com" };
-                
-                policy.WithOrigins(allowedOrigins)
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
-            }
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         });
     });
 
@@ -89,43 +78,78 @@ try
     builder.Services.AddScoped<AuthService>();
     builder.Services.AddScoped<UsuarioService>();
 
-    // Configurar métricas con Prometheus
-    builder.Services.AddSingleton<PrometheusMetrics>();
-    builder.Services.AddSingleton<ICacheMetrics, CacheMetrics>();
+    // Health Checks básicos
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<FlexoDbContext>();
+
+    // Swagger
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "FlexoAuth API",
+            Version = "v1.0",
+            Description = "Sistema de autenticación empresarial"
+        });
+
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header. Ejemplo: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+    });
+
+    // Compresión de respuestas
+    builder.Services.AddResponseCompression();
 
     var app = builder.Build();
 
-    // Configurar pipeline de middleware
+    // Pipeline de middleware
     if (app.Environment.IsDevelopment())
     {
         app.UseDeveloperExceptionPage();
     }
-    else
+
+    // Swagger siempre disponible
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        app.UseExceptionHandler("/Error");
-        app.UseHsts();
-    }
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "FlexoAuth API v1.0");
+        c.RoutePrefix = "swagger";
+    });
 
-    // Configurar escalabilidad y monitoreo
-    app.UseScalability();
-    app.UseMonitoring(builder.Configuration);
-
-    // Pipeline estándar
+    app.UseResponseCompression();
     app.UseHttpsRedirection();
-    app.UseCors("AllowAngular");
+    app.UseCors("AllowAll");
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Mapear controladores
+    // Health checks
+    app.MapHealthChecks("/health");
+
+    // Controladores
     app.MapControllers();
 
-    // Endpoint de métricas para Prometheus
-    app.MapGet("/metrics", async (PrometheusMetrics metrics) =>
-    {
-        return Results.Text(await metrics.GetMetricsAsync(), "text/plain");
-    });
-
-    // Endpoint de información del sistema
+    // Endpoint de información
     app.MapGet("/info", () =>
     {
         return Results.Ok(new
@@ -133,15 +157,11 @@ try
             Application = "FlexoAuthBackend",
             Version = "1.0.0",
             Environment = app.Environment.EnvironmentName,
-            MachineName = Environment.MachineName,
-            ProcessorCount = Environment.ProcessorCount,
-            WorkingSet = Environment.WorkingSet,
-            GCMemory = GC.GetTotalMemory(false),
-            Uptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime()
+            Timestamp = DateTime.UtcNow
         });
     });
 
-    Log.Information("FlexoAuthBackend iniciado exitosamente en {Environment}", app.Environment.EnvironmentName);
+    Log.Information("FlexoAuthBackend iniciado exitosamente");
     
     app.Run();
 }
@@ -153,53 +173,4 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
-}
-
-// Clase para métricas de Prometheus
-public class PrometheusMetrics
-{
-    private readonly ILogger<PrometheusMetrics> _logger;
-    private readonly ICacheMetrics _cacheMetrics;
-
-    public PrometheusMetrics(ILogger<PrometheusMetrics> logger, ICacheMetrics cacheMetrics)
-    {
-        _logger = logger;
-        _cacheMetrics = cacheMetrics;
-    }
-
-    public async Task<string> GetMetricsAsync()
-    {
-        var cacheStats = _cacheMetrics.GetStatistics();
-        var process = Process.GetCurrentProcess();
-        
-        var metrics = new StringBuilder();
-        
-        // Métricas de caché
-        metrics.AppendLine($"# HELP cache_hits_total Total cache hits");
-        metrics.AppendLine($"# TYPE cache_hits_total counter");
-        metrics.AppendLine($"cache_hits_total {cacheStats.TotalHits}");
-        
-        metrics.AppendLine($"# HELP cache_misses_total Total cache misses");
-        metrics.AppendLine($"# TYPE cache_misses_total counter");
-        metrics.AppendLine($"cache_misses_total {cacheStats.TotalMisses}");
-        
-        metrics.AppendLine($"# HELP cache_hit_rate Cache hit rate percentage");
-        metrics.AppendLine($"# TYPE cache_hit_rate gauge");
-        metrics.AppendLine($"cache_hit_rate {cacheStats.HitRate:F2}");
-        
-        // Métricas del sistema
-        metrics.AppendLine($"# HELP process_working_set_bytes Process working set in bytes");
-        metrics.AppendLine($"# TYPE process_working_set_bytes gauge");
-        metrics.AppendLine($"process_working_set_bytes {Environment.WorkingSet}");
-        
-        metrics.AppendLine($"# HELP dotnet_gc_memory_bytes GC memory in bytes");
-        metrics.AppendLine($"# TYPE dotnet_gc_memory_bytes gauge");
-        metrics.AppendLine($"dotnet_gc_memory_bytes {GC.GetTotalMemory(false)}");
-        
-        metrics.AppendLine($"# HELP process_cpu_seconds_total Total CPU seconds");
-        metrics.AppendLine($"# TYPE process_cpu_seconds_total counter");
-        metrics.AppendLine($"process_cpu_seconds_total {process.TotalProcessorTime.TotalSeconds:F2}");
-
-        return metrics.ToString();
-    }
 }

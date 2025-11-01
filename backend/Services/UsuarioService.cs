@@ -8,16 +8,13 @@ namespace FlexoAuthBackend.Services
     public class UsuarioService
     {
         private readonly FlexoDbContext _context;
-        private readonly UsuarioCacheService _cacheService;
         private readonly ILogger<UsuarioService> _logger;
 
         public UsuarioService(
             FlexoDbContext context, 
-            UsuarioCacheService cacheService,
             ILogger<UsuarioService> logger)
         {
             _context = context;
-            _cacheService = cacheService;
             _logger = logger;
         }
 
@@ -239,18 +236,9 @@ namespace FlexoAuthBackend.Services
             };
         }
 
-        // Obtener usuario por código (con caché)
+        // Obtener usuario por código
         public async Task<UsuarioDto?> GetUsuarioByCodigoAsync(string codigoUsuario)
         {
-            // Intentar obtener del caché primero
-            var cachedUser = await _cacheService.GetUsuarioAsync<UsuarioDto>(codigoUsuario);
-            if (cachedUser != null)
-            {
-                _logger.LogDebug("Usuario obtenido del caché: {CodigoUsuario}", codigoUsuario);
-                return cachedUser;
-            }
-
-            // Si no está en caché, consultar la base de datos
             var usuario = await _context.Usuarios
                 .AsNoTracking()
                 .Where(u => u.CodigoUsuario == codigoUsuario)
@@ -270,13 +258,6 @@ namespace FlexoAuthBackend.Services
                     FechaUpdate = u.FechaUpdate
                 })
                 .FirstOrDefaultAsync();
-
-            // Guardar en caché si se encontró
-            if (usuario != null)
-            {
-                await _cacheService.SetUsuarioAsync(codigoUsuario, usuario);
-                _logger.LogDebug("Usuario guardado en caché: {CodigoUsuario}", codigoUsuario);
-            }
 
             return usuario;
         }
@@ -319,9 +300,7 @@ namespace FlexoAuthBackend.Services
                 FechaUpdate = usuario.FechaUpdate
             };
 
-            // Invalidar caché de estadísticas ya que se creó un nuevo usuario
-            await _cacheService.InvalidateStatsAsync();
-            _logger.LogDebug("Usuario creado y caché de estadísticas invalidado: {CodigoUsuario}", usuario.CodigoUsuario);
+            _logger.LogDebug("Usuario creado: {CodigoUsuario}", usuario.CodigoUsuario);
 
             return usuarioDto;
         }
@@ -372,9 +351,7 @@ namespace FlexoAuthBackend.Services
                 FechaUpdate = usuario.FechaUpdate
             };
 
-            // Invalidar caché del usuario y estadísticas
-            await _cacheService.InvalidateUsuarioAsync(codigoUsuario);
-            _logger.LogDebug("Usuario actualizado y caché invalidado: {CodigoUsuario}", codigoUsuario);
+            _logger.LogDebug("Usuario actualizado: {CodigoUsuario}", codigoUsuario);
 
             return usuarioDto;
         }
@@ -396,9 +373,7 @@ namespace FlexoAuthBackend.Services
 
             await _context.SaveChangesAsync();
 
-            // Invalidar caché
-            await _cacheService.InvalidateUsuarioAsync(codigoUsuario);
-            _logger.LogDebug("Usuario eliminado (soft delete) y caché invalidado: {CodigoUsuario}", codigoUsuario);
+            _logger.LogDebug("Usuario eliminado (soft delete): {CodigoUsuario}", codigoUsuario);
 
             return true;
         }
@@ -446,18 +421,9 @@ namespace FlexoAuthBackend.Services
             };
         }
 
-        // Método para obtener estadísticas optimizado (con caché)
+        // Método para obtener estadísticas optimizado
         public async Task<object> GetUsuarioStatsOptimizedAsync()
         {
-            // Intentar obtener del caché primero
-            var cachedStats = await _cacheService.GetStatsAsync<object>();
-            if (cachedStats != null)
-            {
-                _logger.LogDebug("Estadísticas obtenidas del caché");
-                return cachedStats;
-            }
-
-            // Si no está en caché, calcular estadísticas
             _logger.LogDebug("Calculando estadísticas desde la base de datos");
 
             // Usar consultas paralelas para mejor rendimiento
@@ -500,9 +466,7 @@ namespace FlexoAuthBackend.Services
                 FechaActualizacion = DateTime.UtcNow
             };
 
-            // Guardar en caché
-            await _cacheService.SetStatsAsync(stats);
-            _logger.LogDebug("Estadísticas guardadas en caché");
+            _logger.LogDebug("Estadísticas calculadas");
 
             return stats;
         }
